@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<title>PULSE FIGHTERS — Strike Rush</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  :root {
+    --bg-deep: #05070d;
+    --bg: #0a0e1a;
+    --panel: #111726;
+    --panel-2: #182238;
+    --accent: #ff2e5b;
+    --accent-2: #00e0ff;
+    --gold: #ffd84a;
+    --green: #3df58e;
+    --text: #e8eef9;
+    --muted: #7a8499;
+    --border: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: 'Rajdhani', 'Noto Sans JP', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@600;800;900&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+
+body::before {
+content: ‘’;
+position: fixed; inset: 0;
+background:
+radial-gradient(ellipse at 20% 10%, rgba(255,46,91,0.15), transparent 50%),
+radial-gradient(ellipse at 80% 90%, rgba(0,224,255,0.12), transparent 50%),
+linear-gradient(180deg, var(–bg-deep), var(–bg));
+z-index: -2;
+}
+body::after {
+content: ‘’;
+position: fixed; inset: 0;
+background-image:
+linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+background-size: 32px 32px;
+z-index: -1;
+pointer-events: none;
+}
+
+#app {
+height: 100vh;
+height: 100dvh;
+max-width: 480px;
+margin: 0 auto;
+position: relative;
+overflow: hidden;
+padding-top: env(safe-area-inset-top);
+padding-bottom: env(safe-area-inset-bottom);
+}
+
+.screen {
+position: absolute; inset: 0;
+display: flex;
+flex-direction: column;
+padding: 16px;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s ease;
+}
+.screen.active { opacity: 1; pointer-events: auto; }
+
+/* ============ TITLE ============ */
+.title-screen { justify-content: space-between; align-items: center; padding: 32px 20px; }
+.logo {
+font-family: ‘Orbitron’, sans-serif;
+font-weight: 900;
+font-size: 44px;
+letter-spacing: 2px;
+text-align: center;
+line-height: 0.95;
+margin-top: 40px;
+background: linear-gradient(135deg, #fff 30%, var(–accent-2) 70%);
+-webkit-background-clip: text;
+background-clip: text;
+-webkit-text-fill-color: transparent;
+filter: drop-shadow(0 0 20px rgba(0,224,255,0.4));
+}
+.logo small {
+display: block;
+font-size: 14px;
+letter-spacing: 8px;
+color: var(–accent);
+margin-top: 8px;
+-webkit-text-fill-color: var(–accent);
+}
+.title-art {
+flex: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+position: relative;
+}
+.title-orb {
+width: 200px; height: 200px;
+border-radius: 50%;
+background: radial-gradient(circle at 35% 30%, #fff, var(–accent) 30%, #4a0a1f 70%, transparent 100%);
+box-shadow: 0 0 80px var(–accent), inset -20px -30px 50px rgba(0,0,0,0.6);
+animation: pulse 3s ease-in-out infinite;
+position: relative;
+}
+.title-orb::after {
+content: ‘’;
+position: absolute; inset: -20px;
+border: 2px dashed var(–accent-2);
+border-radius: 50%;
+animation: spin 12s linear infinite;
+opacity: 0.5;
+}
+@keyframes pulse { 50% { transform: scale(1.05); filter: brightness(1.2); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.menu { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; }
+.btn {
+background: linear-gradient(135deg, var(–panel-2), var(–panel));
+border: 1px solid var(–border);
+color: var(–text);
+padding: 16px 20px;
+font-family: ‘Orbitron’, sans-serif;
+font-weight: 700;
+font-size: 15px;
+letter-spacing: 2px;
+cursor: pointer;
+border-radius: 4px;
+position: relative;
+overflow: hidden;
+transition: transform 0.15s, border-color 0.2s;
+}
+.btn:active { transform: scale(0.97); }
+.btn.primary {
+background: linear-gradient(135deg, var(–accent), #d11542);
+border-color: var(–accent);
+box-shadow: 0 4px 20px rgba(255,46,91,0.4);
+}
+.btn.primary:active { box-shadow: 0 2px 10px rgba(255,46,91,0.3); }
+.btn::before {
+content: ‘’;
+position: absolute; top: 0; left: -100%;
+width: 100%; height: 100%;
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+transition: left 0.5s;
+}
+.btn:active::before { left: 100%; }
+
+.footer-note {
+text-align: center;
+font-size: 10px;
+color: var(–muted);
+letter-spacing: 1px;
+margin-top: 16px;
+}
+
+/* ============ BATTLE ============ */
+.battle-screen { padding: 0; }
+
+.top-bar {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 12px 16px;
+background: rgba(0,0,0,0.4);
+border-bottom: 1px solid var(–border);
+backdrop-filter: blur(10px);
+}
+.rush-counter {
+font-family: ‘Orbitron’, sans-serif;
+font-size: 12px;
+letter-spacing: 2px;
+color: var(–gold);
+}
+.rush-counter b { font-size: 18px; }
+.turn-indicator {
+font-family: ‘Orbitron’, sans-serif;
+font-size: 11px;
+color: var(–accent-2);
+letter-spacing: 2px;
+}
+
+.fighter-zone {
+flex: 1;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+padding: 12px;
+gap: 8px;
+min-height: 0;
+}
+
+.fighter {
+background: linear-gradient(135deg, var(–panel), var(–panel-2));
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 12px;
+position: relative;
+overflow: hidden;
+}
+.fighter.opponent { border-color: rgba(255,46,91,0.3); }
+.fighter.player { border-color: rgba(0,224,255,0.3); }
+
+.fighter-head {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 8px;
+}
+.fighter-name {
+font-family: ‘Orbitron’, sans-serif;
+font-weight: 700;
+font-size: 14px;
+letter-spacing: 1px;
+}
+.fighter.opponent .fighter-name { color: var(–accent); }
+.fighter.player .fighter-name { color: var(–accent-2); }
+
+.stats {
+display: flex;
+gap: 8px;
+font-size: 10px;
+color: var(–muted);
+letter-spacing: 1px;
+}
+.stats span b { color: var(–text); font-size: 12px; margin-left: 2px; }
+
+.hp-bar {
+height: 14px;
+background: rgba(0,0,0,0.5);
+border-radius: 2px;
+overflow: hidden;
+border: 1px solid var(–border);
+position: relative;
+}
+.hp-fill {
+height: 100%;
+background: linear-gradient(90deg, var(–green), #ffd84a 70%, var(–accent) 100%);
+transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+box-shadow: 0 0 10px currentColor;
+}
+.hp-text {
+position: absolute;
+inset: 0;
+display: flex;
+align-items: center;
+justify-content: center;
+font-family: ‘Orbitron’, sans-serif;
+font-size: 10px;
+font-weight: 700;
+text-shadow: 0 0 4px black, 0 0 4px black;
+letter-spacing: 1px;
+}
+
+.resource-bar {
+height: 6px;
+background: rgba(0,0,0,0.5);
+border-radius: 2px;
+margin-top: 4px;
+overflow: hidden;
+}
+.resource-fill {
+height: 100%;
+background: linear-gradient(90deg, var(–accent-2), #fff);
+transition: width 0.4s ease;
+box-shadow: 0 0 8px var(–accent-2);
+}
+
+.arena {
+flex: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+position: relative;
+margin: 4px 0;
+min-height: 80px;
+}
+
+.clash-zone {
+width: 100%;
+text-align: center;
+font-family: ‘Orbitron’, sans-serif;
+font-weight: 800;
+font-size: 24px;
+letter-spacing: 3px;
+color: var(–gold);
+text-shadow: 0 0 20px var(–gold);
+opacity: 0;
+transform: scale(0.5);
+transition: all 0.3s;
+}
+.clash-zone.show {
+opacity: 1;
+transform: scale(1);
+animation: shake 0.4s;
+}
+@keyframes shake {
+0%, 100% { transform: scale(1) translateX(0); }
+25% { transform: scale(1.1) translateX(-4px); }
+75% { transform: scale(1.1) translateX(4px); }
+}
+
+.action-display {
+position: absolute;
+font-family: ‘Orbitron’, sans-serif;
+font-weight: 900;
+font-size: 28px;
+letter-spacing: 2px;
+padding: 12px 20px;
+border: 2px solid;
+border-radius: 6px;
+background: rgba(0,0,0,0.7);
+backdrop-filter: blur(4px);
+opacity: 0;
+transition: opacity 0.3s;
+}
+.action-display.show { opacity: 1; }
+.action-display.left { left: 20px; transform: translateX(-30px); animation: slideR 0.4s forwards; }
+.action-display.right { right: 20px; transform: translateX(30px); animation: slideL 0.4s forwards; }
+@keyframes slideR { to { transform: translateX(0); } }
+@keyframes slideL { to { transform: translateX(0); } }
+
+.action-display.attack { color: var(–accent); border-color: var(–accent); box-shadow: 0 0 20px var(–accent); }
+.action-display.guard { color: var(–accent-2); border-color: var(–accent-2); box-shadow: 0 0 20px var(–accent-2); }
+.action-display.swift { color: var(–gold); border-color: var(–gold); box-shadow: 0 0 20px var(–gold); }
+
+.damage-pop {
+position: absolute;
+font-family: ‘Orbitron’, sans-serif;
+font-weight: 900;
+font-size: 36px;
+color: var(–accent);
+text-shadow: 0 0 12px var(–accent), 2px 2px 0 #000;
+pointer-events: none;
+animation: dmgPop 1s forwards;
+}
+@keyframes dmgPop {
+0% { opacity: 0; transform: translateY(0) scale(0.5); }
+20% { opacity: 1; transform: translateY(-20px) scale(1.2); }
+80% { opacity: 1; transform: translateY(-50px) scale(1); }
+100% { opacity: 0; transform: translateY(-70px) scale(0.9); }
+}
+
+/* ============ CONTROLS ============ */
+.controls {
+background: rgba(0,0,0,0.5);
+border-top: 1px solid var(–border);
+padding: 14px 12px;
+backdrop-filter: blur(10px);
+}
+
+.timer-bar {
+height: 4px;
+background: rgba(255,255,255,0.05);
+border-radius: 2px;
+overflow: hidden;
+margin-bottom: 12px;
+}
+.timer-fill {
+height: 100%;
+background: linear-gradient(90deg, var(–green), var(–gold), var(–accent));
+width: 100%;
+transform-origin: left;
+}
+
+.action-grid {
+display: grid;
+grid-template-columns: 1fr 1fr 1fr;
+gap: 8px;
+}
+.action-btn {
+background: linear-gradient(135deg, var(–panel-2), var(–panel));
+border: 2px solid var(–border);
+border-radius: 6px;
+padding: 14px 8px;
+color: var(–text);
+font-family: ‘Orbitron’, sans-serif;
+font-weight: 700;
+font-size: 13px;
+letter-spacing: 1px;
+cursor: pointer;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 4px;
+transition: all 0.15s;
+position: relative;
+}
+.action-btn .icon { font-size: 22px; line-height: 1; }
+.action-btn .label { font-size: 11px; }
+.action-btn .hint { font-size: 9px; color: var(–muted); letter-spacing: 0; font-family: ‘Noto Sans JP’, sans-serif; font-weight: 400; }
+
+.action-btn[data-act=“attack”] { border-color: rgba(255,46,91,0.4); }
+.action-btn[data-act=“attack”]:active { background: var(–accent); color: white; }
+.action-btn[data-act=“guard”] { border-color: rgba(0,224,255,0.4); }
+.action-btn[data-act=“guard”]:active { background: var(–accent-2); color: black; }
+.action-btn[data-act=“swift”] { border-color: rgba(255,216,74,0.4); }
+.action-btn[data-act=“swift”]:active { background: var(–gold); color: black; }
+.action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.action-btn.selected { transform: scale(0.95); }
+.action-btn.selected[data-act=“attack”] { background: var(–accent); color: white; box-shadow: 0 0 20px var(–accent); }
+.action-btn.selected[data-act=“guard”] { background: var(–accent-2); color: black; box-shadow: 0 0 20px var(–accent-2); }
+.action-btn.selected[data-act=“swift”] { background: var(–gold); color: black; box-shadow: 0 0 20px var(–gold); }
+
+.special-row {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 8px;
+margin-top: 8px;
+}
+.special-btn {
+background: linear-gradient(135deg, #4a0a1f, #2a0510);
+border: 1px solid var(–accent);
+color: var(–gold);
+padding: 10px;
+font-family: ‘Orbitron’, sans-serif;
+font-weight: 700;
+font-size: 11px;
+letter-spacing: 1px;
+border-radius: 4px;
+cursor: pointer;
+transition: all 0.15s;
+}
+.special-btn:disabled { opacity: 0.35; }
+.special-btn:not(:disabled):active { transform: scale(0.95); }
+.special-btn.charge { border-color: var(–accent-2); color: var(–accent-2); background: linear-gradient(135deg, #052838, #021820); }
+.special-btn.ultimate.ready {
+animation: ready 1s ease-in-out infinite;
+}
+@keyframes ready {
+50% { box-shadow: 0 0 20px var(–gold); border-color: var(–gold); }
+}
+
+/* ============ LOG ============ */
+.battle-log {
+position: absolute;
+bottom: 220px;
+left: 12px;
+right: 12px;
+max-height: 80px;
+overflow-y: auto;
+background: rgba(0,0,0,0.7);
+border: 1px solid var(–border);
+border-radius: 6px;
+padding: 6px 10px;
+font-size: 11px;
+color: var(–text);
+line-height: 1.5;
+font-family: ‘Noto Sans JP’, sans-serif;
+pointer-events: none;
+backdrop-filter: blur(8px);
+transition: opacity 0.3s;
+}
+.battle-log p { opacity: 0.6; margin-bottom: 2px; }
+.battle-log p:last-child { opacity: 1; color: var(–gold); }
+
+/* ============ MODAL ============ */
+.modal-overlay {
+position: absolute; inset: 0;
+background: rgba(0,0,0,0.85);
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 100;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s;
+backdrop-filter: blur(8px);
+}
+.modal-overlay.show { opacity: 1; pointer-events: auto; }
+.modal {
+background: linear-gradient(135deg, var(–panel), var(–panel-2));
+border: 2px solid var(–accent);
+border-radius: 8px;
+padding: 28px 24px;
+width: 88%;
+max-width: 360px;
+text-align: center;
+transform: scale(0.8);
+transition: transform 0.3s;
+box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255,46,91,0.3);
+}
+.modal-overlay.show .modal { transform: scale(1); }
+.modal h2 {
+font-family: ‘Orbitron’, sans-serif;
+font-size: 24px;
+letter-spacing: 3px;
+margin-bottom: 12px;
+background: linear-gradient(135deg, var(–gold), var(–accent));
+-webkit-background-clip: text;
+background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+.modal p { font-size: 13px; line-height: 1.7; color: var(–muted); margin-bottom: 18px; font-family: ‘Noto Sans JP’, sans-serif; }
+.modal .stats-summary {
+background: rgba(0,0,0,0.4);
+border-radius: 4px;
+padding: 12px;
+margin: 12px 0;
+font-size: 12px;
+color: var(–text);
+}
+.modal .stats-summary div { display: flex; justify-content: space-between; padding: 4px 0; }
+.modal .stats-summary b { color: var(–gold); font-family: ‘Orbitron’, sans-serif; }
+
+/* ============ TUTORIAL / RULES ============ */
+.rules-content {
+flex: 1;
+overflow-y: auto;
+padding: 20px 4px;
+-webkit-overflow-scrolling: touch;
+}
+.rules-content h3 {
+font-family: ‘Orbitron’, sans-serif;
+font-size: 14px;
+letter-spacing: 2px;
+color: var(–accent-2);
+margin: 20px 0 8px;
+border-left: 3px solid var(–accent);
+padding-left: 10px;
+}
+.rules-content h3:first-child { margin-top: 0; }
+.rules-content p {
+font-size: 13px;
+line-height: 1.7;
+color: var(–text);
+margin-bottom: 8px;
+font-family: ‘Noto Sans JP’, sans-serif;
+}
+.rules-content .triangle {
+display: flex;
+justify-content: space-around;
+padding: 16px;
+background: rgba(0,0,0,0.4);
+border-radius: 8px;
+margin: 12px 0;
+}
+.rules-content .tri-item { text-align: center; font-family: ‘Orbitron’, sans-serif; font-size: 11px; }
+.rules-content .tri-item .ico { font-size: 28px; display: block; margin-bottom: 4px; }
+.rules-content .arrow { color: var(–muted); align-self: center; }
+
+.screen-header {
+display: flex;
+align-items: center;
+gap: 12px;
+padding-bottom: 12px;
+border-bottom: 1px solid var(–border);
+}
+.back-btn {
+background: var(–panel);
+border: 1px solid var(–border);
+color: var(–text);
+width: 36px; height: 36px;
+border-radius: 4px;
+font-size: 18px;
+cursor: pointer;
+}
+.screen-header h2 {
+font-family: ‘Orbitron’, sans-serif;
+font-size: 18px;
+letter-spacing: 2px;
+color: var(–accent-2);
+}
+
+/* ============ AD SLOT ============ */
+.ad-slot {
+background: rgba(255,255,255,0.03);
+border: 1px dashed var(–border);
+text-align: center;
+padding: 8px;
+font-size: 10px;
+color: var(–muted);
+letter-spacing: 1px;
+}
+
+/* small screens */
+@media (max-height: 700px) {
+.logo { font-size: 36px; margin-top: 20px; }
+.title-orb { width: 140px; height: 140px; }
+.action-btn { padding: 10px 6px; }
+.action-btn .icon { font-size: 18px; }
+}
+</style>
+
+</head>
+<body>
+<div id="app">
+
+  <!-- TITLE SCREEN -->
+
+  <section class="screen title-screen active" id="screen-title">
+    <div class="logo">
+      PULSE<br>FIGHTERS
+      <small>STRIKE RUSH</small>
+    </div>
+    <div class="title-art">
+      <div class="title-orb"></div>
+    </div>
+    <div class="menu">
+      <button class="btn primary" data-go="rush">SB RUSH ・ 7連戦</button>
+      <button class="btn" data-go="single">フリーバトル</button>
+      <button class="btn" data-go="rules">ルール / 練習</button>
+    </div>
+    <div class="ad-slot">— AD SPACE —</div>
+    <div class="footer-note">v0.1 ・ ORIGINAL FIGHTING SIM</div>
+  </section>
+
+  <!-- RULES -->
+
+  <section class="screen" id="screen-rules">
+    <div class="screen-header">
+      <button class="back-btn" data-go="title">←</button>
+      <h2>ルール</h2>
+    </div>
+    <div class="rules-content">
+      <h3>3すくみ</h3>
+      <p>毎ターン、お互いに3つのアクションから1つを選ぶ。同時公開のジャンケン形式。</p>
+      <div class="triangle">
+        <div class="tri-item"><span class="ico">⚔️</span>ATTACK<br>強</div>
+        <span class="arrow">→</span>
+        <div class="tri-item"><span class="ico">💨</span>SWIFT<br>速</div>
+        <span class="arrow">→</span>
+        <div class="tri-item"><span class="ico">🛡️</span>GUARD<br>防</div>
+        <span class="arrow">→</span>
+        <div class="tri-item"><span class="ico">⚔️</span>ATTACK</div>
+      </div>
+      <p>ATTACKはGUARDに勝ち、GUARDはSWIFTに勝ち、SWIFTはATTACKに勝つ。同じならクラッシュ(両者ダメージ少なめ)。</p>
+
+```
+  <h3>ダメージ計算</h3>
+  <p>勝者の対応ステータス − 敗者の対応ステータスがダメージ。例えばATTACK勝ちなら、勝者のATK − 敗者のDEFが基本ダメージ。</p>
+
+  <h3>気合い (CHARGE)</h3>
+  <p>1ターン使ってCHARGEすると、次のアクションのステータスが+30。ただし相手にバレる(防御態勢)。</p>
+
+  <h3>ULTIMATE</h3>
+  <p>ゲージMAXで使用可能。問答無用の固定ダメージ。ただし発動ターンはGUARDで完封される。</p>
+
+  <h3>SB RUSH</h3>
+  <p>7人の敵を連続で撃破するモード。HPと気合いゲージは次戦に持ち越し。回復なし。</p>
+</div>
+```
+
+  </section>
+
+  <!-- BATTLE -->
+
+  <section class="screen battle-screen" id="screen-battle">
+    <div class="top-bar">
+      <div class="rush-counter" id="rushCounter">RUSH <b>1</b>/7</div>
+      <div class="turn-indicator" id="turnIndicator">TURN 1</div>
+    </div>
+
+```
+<div class="fighter-zone">
+  <!-- OPPONENT -->
+  <div class="fighter opponent">
+    <div class="fighter-head">
+      <div class="fighter-name" id="oppName">VOLT-09</div>
+      <div class="stats" id="oppStats">
+        <span>ATK<b>70</b></span><span>DEF<b>60</b></span><span>SPD<b>65</b></span>
+      </div>
+    </div>
+    <div class="hp-bar">
+      <div class="hp-fill" id="oppHpFill" style="width:100%"></div>
+      <div class="hp-text" id="oppHpText">1000 / 1000</div>
+    </div>
+    <div class="resource-bar"><div class="resource-fill" id="oppGauge" style="width:0%"></div></div>
+  </div>
+
+  <!-- ARENA -->
+  <div class="arena" id="arena">
+    <div class="clash-zone" id="clashZone">VS</div>
+    <div class="action-display left" id="oppAction"></div>
+    <div class="action-display right" id="playerAction"></div>
+  </div>
+
+  <!-- PLAYER -->
+  <div class="fighter player">
+    <div class="fighter-head">
+      <div class="fighter-name">YOU</div>
+      <div class="stats" id="playerStats">
+        <span>ATK<b>75</b></span><span>DEF<b>65</b></span><span>SPD<b>70</b></span>
+      </div>
+    </div>
+    <div class="hp-bar">
+      <div class="hp-fill" id="playerHpFill" style="width:100%"></div>
+      <div class="hp-text" id="playerHpText">1200 / 1200</div>
+    </div>
+    <div class="resource-bar"><div class="resource-fill" id="playerGauge" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="battle-log" id="battleLog"></div>
+
+<div class="controls">
+  <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+  <div class="action-grid">
+    <button class="action-btn" data-act="attack">
+      <span class="icon">⚔️</span><span class="label">ATTACK</span><span class="hint">攻撃</span>
+    </button>
+    <button class="action-btn" data-act="guard">
+      <span class="icon">🛡️</span><span class="label">GUARD</span><span class="hint">防御</span>
+    </button>
+    <button class="action-btn" data-act="swift">
+      <span class="icon">💨</span><span class="label">SWIFT</span><span class="hint">高速</span>
+    </button>
+  </div>
+  <div class="special-row">
+    <button class="special-btn charge" data-act="charge">CHARGE +30</button>
+    <button class="special-btn ultimate" data-act="ultimate" disabled>ULTIMATE</button>
+  </div>
+</div>
+```
+
+  </section>
+
+  <!-- MODAL -->
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <h2 id="modalTitle">VICTORY</h2>
+      <p id="modalText"></p>
+      <div class="stats-summary" id="modalStats"></div>
+      <button class="btn primary" id="modalBtn">NEXT</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==================== GAME LOGIC ====================
+const STATE = {
+  mode: 'single',     // 'single' or 'rush'
+  rushIndex: 0,
+  rushWins: 0,
+  player: null,
+  opponent: null,
+  turn: 1,
+  playerCharged: false,
+  oppCharged: false,
+  playerAction: null,
+  oppAction: null,
+  inputLocked: false,
+  timerHandle: null,
+  timeLeft: 0
+};
+
+const TURN_TIME = 8000; // 8s per decision
+
+// Roster of opponents (original characters, original lore)
+const OPPONENTS = [
+  { name: 'VOLT-09', atk: 65, def: 55, spd: 70, hp: 900, ai: 'aggressive' },
+  { name: 'IRONWALL', atk: 60, def: 80, spd: 50, hp: 1100, ai: 'defensive' },
+  { name: 'CIPHER', atk: 70, def: 65, spd: 75, hp: 1000, ai: 'random' },
+  { name: 'PHANTOM-X', atk: 80, def: 60, spd: 80, hp: 950, ai: 'reader' },
+  { name: 'NOVA', atk: 75, def: 70, spd: 70, hp: 1100, ai: 'balanced' },
+  { name: 'KAIROS', atk: 85, def: 70, spd: 78, hp: 1150, ai: 'reader' },
+  { name: 'OVERLORD-Z', atk: 95, def: 85, spd: 82, hp: 1400, ai: 'boss' }
+];
+
+const PLAYER_BASE = { name: 'YOU', atk: 75, def: 65, spd: 70, hp: 1200 };
+
+// Action triangle: attack > guard > swift > attack
+const BEATS = { attack: 'guard', guard: 'swift', swift: 'attack' };
+
+function newFighter(template, isPlayer = false) {
+  return {
+    ...template,
+    maxHp: template.hp,
+    gauge: 0,
+    isPlayer
+  };
+}
+
+// ==================== UI HELPERS ====================
+const $ = id => document.getElementById(id);
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(`screen-${id}`).classList.add('active');
+}
+
+function log(text, highlight = false) {
+  const lg = $('battleLog');
+  const p = document.createElement('p');
+  p.textContent = text;
+  if (highlight) p.style.color = 'var(--gold)';
+  lg.appendChild(p);
+  while (lg.children.length > 4) lg.removeChild(lg.firstChild);
+  lg.scrollTop = lg.scrollHeight;
+}
+
+function updateBars() {
+  const p = STATE.player, o = STATE.opponent;
+  $('playerHpFill').style.width = Math.max(0, p.hp / p.maxHp * 100) + '%';
+  $('playerHpText').textContent = `${Math.max(0, p.hp)} / ${p.maxHp}`;
+  $('playerGauge').style.width = p.gauge + '%';
+  $('oppHpFill').style.width = Math.max(0, o.hp / o.maxHp * 100) + '%';
+  $('oppHpText').textContent = `${Math.max(0, o.hp)} / ${o.maxHp}`;
+  $('oppGauge').style.width = o.gauge + '%';
+
+  $('oppName').textContent = o.name;
+  $('oppStats').innerHTML = `<span>ATK<b>${o.atk}</b></span><span>DEF<b>${o.def}</b></span><span>SPD<b>${o.spd}</b></span>`;
+  $('playerStats').innerHTML = `<span>ATK<b>${p.atk}</b></span><span>DEF<b>${p.def}</b></span><span>SPD<b>${p.spd}</b></span>`;
+
+  $('rushCounter').innerHTML = STATE.mode === 'rush' ? `RUSH <b>${STATE.rushIndex + 1}</b>/7` : `FREE BATTLE`;
+  $('turnIndicator').textContent = `TURN ${STATE.turn}`;
+
+  // Ultimate readiness
+  const ultBtn = document.querySelector('[data-act="ultimate"]');
+  if (p.gauge >= 100) {
+    ultBtn.disabled = false;
+    ultBtn.classList.add('ready');
+  } else {
+    ultBtn.disabled = true;
+    ultBtn.classList.remove('ready');
+  }
+}
+
+function popDamage(target, amount, type = 'normal') {
+  const el = document.createElement('div');
+  el.className = 'damage-pop';
+  el.textContent = '-' + amount;
+  if (type === 'crit') el.style.color = 'var(--gold)';
+  if (type === 'block') { el.textContent = 'BLOCKED'; el.style.color = 'var(--accent-2)'; el.style.fontSize = '24px'; }
+  const arena = $('arena');
+  el.style.left = target === 'player' ? '70%' : '20%';
+  el.style.top = target === 'player' ? '60%' : '20%';
+  arena.appendChild(el);
+  setTimeout(() => el.remove(), 1100);
+}
+
+function showActions(playerAct, oppAct) {
+  const pEl = $('playerAction'), oEl = $('oppAction');
+  const labels = { attack: 'ATTACK', guard: 'GUARD', swift: 'SWIFT', charge: 'CHARGE', ultimate: 'ULTIMATE!' };
+  pEl.textContent = labels[playerAct] || '?';
+  oEl.textContent = labels[oppAct] || '?';
+  pEl.className = 'action-display right show ' + (playerAct === 'ultimate' ? 'attack' : (playerAct === 'charge' ? 'guard' : playerAct));
+  oEl.className = 'action-display left show ' + (oppAct === 'ultimate' ? 'attack' : (oppAct === 'charge' ? 'guard' : oppAct));
+}
+
+function clearActions() {
+  $('playerAction').className = 'action-display right';
+  $('oppAction').className = 'action-display left';
+  $('clashZone').classList.remove('show');
+}
+
+function showClash(text = 'CLASH!') {
+  const z = $('clashZone');
+  z.textContent = text;
+  z.classList.add('show');
+  setTimeout(() => z.classList.remove('show'), 800);
+}
+
+// ==================== AI ====================
+function aiChoose(opponent, player, history) {
+  // Force ultimate if available
+  if (opponent.gauge >= 100 && Math.random() < 0.5) return 'ultimate';
+
+  const opts = ['attack', 'guard', 'swift'];
+  switch (opponent.ai) {
+    case 'aggressive':
+      // weights toward attack
+      return weighted(['attack', 'attack', 'attack', 'swift', 'guard']);
+    case 'defensive':
+      return weighted(['guard', 'guard', 'attack', 'swift']);
+    case 'random':
+      return opts[Math.floor(Math.random() * 3)];
+    case 'reader':
+      // tries to counter player's most common recent action
+      if (history.length >= 2) {
+        const last = history[history.length - 1];
+        // counter the last action: if player attacked, AI plays swift (swift beats attack)
+        const counter = { attack: 'swift', guard: 'attack', swift: 'guard' };
+        if (Math.random() < 0.6) return counter[last];
+      }
+      return opts[Math.floor(Math.random() * 3)];
+    case 'balanced':
+      return weighted(['attack', 'guard', 'swift', 'attack', 'guard']);
+    case 'boss':
+      // Reader + occasional charge
+      if (opponent.gauge < 100 && Math.random() < 0.15) return 'charge';
+      if (history.length >= 1) {
+        const last = history[history.length - 1];
+        const counter = { attack: 'swift', guard: 'attack', swift: 'guard' };
+        if (Math.random() < 0.5) return counter[last];
+      }
+      return opts[Math.floor(Math.random() * 3)];
+    default:
+      return opts[Math.floor(Math.random() * 3)];
+  }
+}
+
+function weighted(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+const playerHistory = [];
+
+// ==================== RESOLVE ====================
+function resolveTurn(playerAct, oppAct) {
+  STATE.inputLocked = true;
+  const p = STATE.player, o = STATE.opponent;
+
+  // Apply charge buffs
+  let pAtk = p.atk, pDef = p.def, pSpd = p.spd;
+  let oAtk = o.atk, oDef = o.def, oSpd = o.spd;
+  if (STATE.playerCharged) { pAtk += 30; pDef += 30; pSpd += 30; }
+  if (STATE.oppCharged) { oAtk += 30; oDef += 30; oSpd += 30; }
+
+  showActions(playerAct, oppAct);
+
+  setTimeout(() => {
+    let result = '';
+    let pDmg = 0, oDmg = 0;
+
+    // Handle CHARGE / ULTIMATE specials
+    if (playerAct === 'charge' && oppAct === 'charge') {
+      p.gauge = Math.min(100, p.gauge + 35);
+      o.gauge = Math.min(100, o.gauge + 35);
+      log('両者気合いを溜めた…!', true);
+    } else if (playerAct === 'charge') {
+      // Player charges, opponent acts. If opp attacks, big damage to player.
+      p.gauge = Math.min(100, p.gauge + 40);
+      STATE.playerCharged = true;
+      if (oppAct === 'attack') {
+        const dmg = Math.round((oAtk + 20) * 1.4);
+        p.hp -= dmg;
+        popDamage('player', dmg, 'crit');
+        log(`${o.name}の追撃! ${dmg}ダメージ`);
+      } else if (oppAct === 'ultimate') {
+        const dmg = Math.round(oAtk * 2.5);
+        p.hp -= dmg;
+        popDamage('player', dmg, 'crit');
+        o.gauge = 0;
+        log(`${o.name}のULTIMATEが直撃! ${dmg}ダメージ!`);
+      } else {
+        log('プレイヤーは気合いを溜めた');
+      }
+    } else if (oppAct === 'charge') {
+      o.gauge = Math.min(100, o.gauge + 40);
+      STATE.oppCharged = true;
+      if (playerAct === 'attack') {
+        const dmg = Math.round((pAtk + 20) * 1.4);
+        o.hp -= dmg;
+        popDamage('opponent', dmg, 'crit');
+        log(`隙を突いて追撃! ${dmg}ダメージ`);
+      } else if (playerAct === 'ultimate') {
+        const dmg = Math.round(pAtk * 2.5);
+        o.hp -= dmg;
+        popDamage('opponent', dmg, 'crit');
+        p.gauge = 0;
+        log(`ULTIMATE炸裂! ${dmg}ダメージ!`);
+      } else {
+        log(`${o.name}は気合いを溜めた`);
+      }
+    } else if (playerAct === 'ultimate' && oppAct === 'guard') {
+      // Guard fully blocks ultimate
+      p.gauge = 0;
+      log('ULTIMATEはGUARDで完封された…!');
+      popDamage('opponent', 0, 'block');
+    } else if (playerAct === 'ultimate') {
+      const dmg = Math.round(pAtk * 3);
+      o.hp -= dmg;
+      popDamage('opponent', dmg, 'crit');
+      p.gauge = 0;
+      log(`ULTIMATE!! ${dmg}ダメージ!`, true);
+    } else if (oppAct === 'ultimate' && playerAct === 'guard') {
+      o.gauge = 0;
+      log(`${o.name}のULTIMATEを完璧にガードした!`);
+      popDamage('player', 0, 'block');
+    } else if (oppAct === 'ultimate') {
+      const dmg = Math.round(oAtk * 3);
+      p.hp -= dmg;
+      popDamage('player', dmg, 'crit');
+      o.gauge = 0;
+      log(`${o.name}のULTIMATE!! ${dmg}ダメージ!`, true);
+    } else if (playerAct === oppAct) {
+      // Tie - small mutual damage based on attack action
+      if (playerAct === 'attack') {
+        pDmg = Math.round(Math.max(10, oAtk * 0.4));
+        oDmg = Math.round(Math.max(10, pAtk * 0.4));
+        p.hp -= pDmg; o.hp -= oDmg;
+        popDamage('player', pDmg);
+        popDamage('opponent', oDmg);
+        showClash('CLASH!');
+        log(`攻撃が相殺! 互いに ${pDmg} / ${oDmg} ダメージ`);
+      } else if (playerAct === 'swift') {
+        showClash('TIE');
+        log('お互いを見合った…');
+      } else {
+        showClash('STALL');
+        log('お互いガード!');
+        p.gauge = Math.min(100, p.gauge + 10);
+        o.gauge = Math.min(100, o.gauge + 10);
+      }
+    } else if (BEATS[playerAct] === oppAct) {
+      // Player wins
+      let dmg;
+      if (playerAct === 'attack') dmg = Math.max(20, pAtk - oDef * 0.5);
+      else if (playerAct === 'guard') dmg = Math.max(15, pDef * 0.7 - oSpd * 0.3);
+      else dmg = Math.max(20, pSpd - oAtk * 0.4);
+      dmg = Math.round(dmg);
+      o.hp -= dmg;
+      popDamage('opponent', dmg);
+      showClash(playerAct.toUpperCase() + ' WINS');
+      log(`${actionJp(playerAct)}が決まった! ${dmg}ダメージ!`, true);
+      p.gauge = Math.min(100, p.gauge + 25);
+      o.gauge = Math.min(100, o.gauge + 10);
+    } else {
+      // Opponent wins
+      let dmg;
+      if (oppAct === 'attack') dmg = Math.max(20, oAtk - pDef * 0.5);
+      else if (oppAct === 'guard') dmg = Math.max(15, oDef * 0.7 - pSpd * 0.3);
+      else dmg = Math.max(20, oSpd - pAtk * 0.4);
+      dmg = Math.round(dmg);
+      p.hp -= dmg;
+      popDamage('player', dmg);
+      showClash(oppAct.toUpperCase() + ' WINS');
+      log(`${o.name}の${actionJp(oppAct)}を受けた! ${dmg}ダメージ`);
+      o.gauge = Math.min(100, o.gauge + 25);
+      p.gauge = Math.min(100, p.gauge + 10);
+    }
+
+    // Reset charges if used
+    if (playerAct !== 'charge' && STATE.playerCharged) STATE.playerCharged = false;
+    if (oppAct !== 'charge' && STATE.oppCharged) STATE.oppCharged = false;
+
+    // Track player history for AI
+    playerHistory.push(playerAct);
+    if (playerHistory.length > 5) playerHistory.shift();
+
+    updateBars();
+
+    // Check end
+    setTimeout(() => {
+      clearActions();
+      document.querySelectorAll('.action-btn, .special-btn').forEach(b => b.classList.remove('selected'));
+      if (p.hp <= 0 || o.hp <= 0) {
+        endBattle();
+      } else {
+        STATE.turn++;
+        STATE.inputLocked = false;
+        startTurn();
+      }
+    }, 1300);
+  }, 700);
+}
+
+function actionJp(a) {
+  return { attack: 'ATTACK', guard: 'GUARD', swift: 'SWIFT', charge: 'CHARGE', ultimate: 'ULTIMATE' }[a] || a;
+}
+
+// ==================== TURN ====================
+function startTurn() {
+  STATE.playerAction = null;
+  STATE.oppAction = null;
+  $('turnIndicator').textContent = `TURN ${STATE.turn}`;
+
+  // Pre-decide AI choice
+  STATE.oppAction = aiChoose(STATE.opponent, STATE.player, playerHistory);
+
+  // Start timer
+  STATE.timeLeft = TURN_TIME;
+  const tf = $('timerFill');
+  tf.style.transition = 'none';
+  tf.style.transform = 'scaleX(1)';
+  requestAnimationFrame(() => {
+    tf.style.transition = `transform ${TURN_TIME}ms linear`;
+    tf.style.transform = 'scaleX(0)';
+  });
+
+  clearTimeout(STATE.timerHandle);
+  STATE.timerHandle = setTimeout(() => {
+    if (!STATE.playerAction && !STATE.inputLocked) {
+      // Default to guard if time out
+      handleInput('guard');
+      log('時間切れ! 自動GUARD');
+    }
+  }, TURN_TIME);
+}
+
+function handleInput(act) {
+  if (STATE.inputLocked || STATE.playerAction) return;
+  if (act === 'ultimate' && STATE.player.gauge < 100) return;
+  STATE.playerAction = act;
+  clearTimeout(STATE.timerHandle);
+
+  // visual feedback
+  document.querySelectorAll('.action-btn, .special-btn').forEach(b => b.classList.remove('selected'));
+  const btn = document.querySelector(`[data-act="${act}"]`);
+  if (btn) btn.classList.add('selected');
+
+  resolveTurn(act, STATE.oppAction);
+}
+
+// ==================== BATTLE START / END ====================
+function startBattle(opponentTemplate, isFirstOfRush) {
+  STATE.opponent = newFighter(opponentTemplate);
+  if (isFirstOfRush || !STATE.player) {
+    STATE.player = newFighter(PLAYER_BASE, true);
+  }
+  STATE.turn = 1;
+  STATE.playerCharged = false;
+  STATE.oppCharged = false;
+  STATE.inputLocked = false;
+  playerHistory.length = 0;
+  $('battleLog').innerHTML = '';
+  log(`${STATE.opponent.name} 出現!`, true);
+  updateBars();
+  showScreen('battle');
+  startTurn();
+}
+
+function endBattle() {
+  STATE.inputLocked = true;
+  clearTimeout(STATE.timerHandle);
+  $('timerFill').style.transform = 'scaleX(0)';
+
+  const win = STATE.opponent.hp <= 0;
+
+  if (STATE.mode === 'rush') {
+    if (win) {
+      STATE.rushWins++;
+      if (STATE.rushIndex >= 6) {
+        // Final clear
+        showResult('CHAMPION', `7連戦完全制覇! 最終HP ${Math.max(0, STATE.player.hp)}`, true, true);
+      } else {
+        STATE.rushIndex++;
+        showResult('VICTORY', `${STATE.rushIndex}/7 突破! 次の挑戦者へ…`, true, false);
+      }
+    } else {
+      showResult('DEFEAT', `${STATE.rushIndex + 1}戦目で敗北… ${STATE.rushWins}勝で終了`, false, true);
+    }
+  } else {
+    showResult(win ? 'VICTORY' : 'DEFEAT', win ? '勝利!' : '敗北…', win, true);
+  }
+}
+
+function showResult(title, text, isWin, finalScreen) {
+  $('modalTitle').textContent = title;
+  $('modalTitle').style.background = isWin
+    ? 'linear-gradient(135deg, var(--gold), var(--accent-2))'
+    : 'linear-gradient(135deg, var(--accent), #8a0a25)';
+  $('modalTitle').style.webkitBackgroundClip = 'text';
+  $('modalText').textContent = text;
+  $('modalStats').innerHTML = `
+    <div><span>残りHP</span><b>${Math.max(0, STATE.player.hp)} / ${STATE.player.maxHp}</b></div>
+    <div><span>気合い</span><b>${STATE.player.gauge}%</b></div>
+    <div><span>経過ターン</span><b>${STATE.turn}</b></div>
+  `;
+  const btn = $('modalBtn');
+  if (finalScreen) {
+    btn.textContent = 'TITLE';
+    btn.onclick = () => { closeModal(); showScreen('title'); };
+  } else {
+    btn.textContent = 'NEXT BATTLE';
+    btn.onclick = () => {
+      closeModal();
+      startBattle(OPPONENTS[STATE.rushIndex], false);
+    };
+  }
+  $('modalOverlay').classList.add('show');
+}
+
+function closeModal() { $('modalOverlay').classList.remove('show'); }
+
+// ==================== EVENT BINDINGS ====================
+document.querySelectorAll('[data-go]').forEach(b => {
+  b.addEventListener('click', () => {
+    const target = b.dataset.go;
+    if (target === 'rush') {
+      STATE.mode = 'rush';
+      STATE.rushIndex = 0;
+      STATE.rushWins = 0;
+      STATE.player = null;
+      startBattle(OPPONENTS[0], true);
+    } else if (target === 'single') {
+      STATE.mode = 'single';
+      STATE.player = null;
+      // Random opponent
+      const opp = OPPONENTS[Math.floor(Math.random() * (OPPONENTS.length - 1))];
+      startBattle(opp, true);
+    } else {
+      showScreen(target);
+    }
+  });
+});
+
+document.querySelectorAll('.action-btn, .special-btn').forEach(b => {
+  b.addEventListener('click', () => handleInput(b.dataset.act));
+});
+
+// Prevent double-tap zoom on iOS
+document.addEventListener('touchend', e => {
+  if (e.target.tagName === 'BUTTON') e.preventDefault();
+}, { passive: false });
+</script>
+
+</body>
+</html>
